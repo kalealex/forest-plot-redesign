@@ -1,4 +1,4 @@
-#forest-plot-redesign
+# forest-plot-redesign
 
 This repository is a workspace for a visualization redesign of the forest plot. The current contents of the directory are a work in progress.
 

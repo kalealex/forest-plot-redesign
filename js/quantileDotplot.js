@@ -4,16 +4,17 @@
  */
 function quantileDotplot() {
 
-  var margin = { 'top': 10, 'right': 40, 'left': 0, 'bottom': 20 },
+  var margin = { 'top': 10, 'right': 40, 'left': 10, 'bottom': 20 },
     width = 500,
     height = 200,
     svg,
     chartWrapper,
     data,
-    partitionWidth = 2,
+    partitionWidth = 1,
     nDots = 20,
     xBins,
     yExtent,
+    x0,
     x,
     y,
     xAxis,
@@ -56,23 +57,29 @@ function quantileDotplot() {
     setAxesScales(data);
 
     // then continue rendering the chart
-    x.range([0, width])
-    y.range([height, 0])
+    x0.range([0, width]);
+    x.range([0, width]);
+    y.range([height, 0]);
     dotRadius = Math.abs(y(1.0 / nDots) - y(0)) / 2; // half the height of one dot
 
     // change tick values based on data
     yTicksN = 6;
     yTickVals = Array.apply(null, {length: yTicksN + 1}).map(function(val, idx){ return idx; }).map(function(elem) {
-      return Math.round(yExtent[1] * elem / yTicksN)
+      return yExtent[1] * elem / yTicksN;
     });
     yAxis.scale(y)
       .ticks(yTicksN)
       .tickSize(4)
       .tickValues(yTickVals)
       .tickPadding(7);
+    xTicksN = 10;
+    xTickVals = Array.apply(null, {length: xTicksN + 1}).map(function(val, idx){ return idx; }).map(function(elem) {
+      return (xBins[xBins.length - 1] - xBins[0]) * elem / xTicksN + xBins[0];
+    });
     xAxis.scale(x)
-      .ticks(8)
+      .ticks(xTicksN)
       .tickSize(4)
+      .tickValues(xTickVals)
       .tickPadding(7);
 
     // set svg and chartWrapper dimensions
@@ -98,7 +105,7 @@ function quantileDotplot() {
     dot.enter().append('circle')
       .attr('class', 'g-dot')
         .attr("cx", function(d) {
-          return x(d.bin);
+          return x0(d.bin);
         }) 
         .attr("cy", function(d) {
             return y(0) - d.idx * 2 * dotRadius - dotRadius; })
@@ -110,7 +117,7 @@ function quantileDotplot() {
 
     // update set
     dot.attr("cx", function(d) {
-      return x(d.bin);
+      return x0(d.bin);
     }) 
     .attr("cy", function(d) {
         return y(0) - d.idx * 2 * dotRadius - dotRadius; })
@@ -146,7 +153,7 @@ function quantileDotplot() {
       var rawValue = jStat.normal.inv(i, data.m, data.sd),
         binMidpoint = partitionMidpoints.reduce(function(closest, curr) {
           // find and return the partition midpoint which is closest to the raw value
-          // of the distribution at this quantile
+          // of the distribution at this quantile (this might not be the right way to bin points)
           if (Math.abs(closest - rawValue) > Math.abs(curr - rawValue)) {
             return curr;
           } else {
@@ -191,9 +198,12 @@ function quantileDotplot() {
     // yExtent = [0, maxDots/nDots];
     yExtent = [0, 1];
 
-    x = d3.scalePoint()
+    x0 = d3.scalePoint()
       .domain(xBins)
       .padding(0.2);
+
+    x = d3.scaleLinear()
+      .domain([xBins[0], xBins[xBins.length - 1]]);
 
     y = d3.scaleLinear()
           .domain(yExtent);

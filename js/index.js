@@ -23,8 +23,8 @@ testVis = d3.select('#vis');
 
 // designate parameters of fake data (will eventually be array of effect size estimates)
 var data = [{
-    'm': 2,
-    'sd': 5,
+    'm': 0,
+    'sd': 2,
     'n': 100
 }];
 // load data and initialize

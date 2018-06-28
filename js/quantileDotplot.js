@@ -5,12 +5,12 @@
 function quantileDotplot() {
 
   var margin = { 'top': 10, 'right': 40, 'left': 10, 'bottom': 20 },
-    width = 500,
-    height = 200,
+    width = 200,
+    height = 100,
     svg,
     chartWrapper,
     data,
-    partitionWidth = 1,
+    partitionWidth = .5,
     nDots = 20,
     xBins,
     yExtent,
@@ -20,7 +20,9 @@ function quantileDotplot() {
     xAxis,
     yAxis,
     dotRadius,
-    selection;
+    selection,
+    modelSpec = 'fixed effects' // need drop down menu with options: 'fixed effects', 'random effects', 'grouped fixed effects', grouped random effects'
+    mode = 'describe'; // need drop down menu with options: describe, aggregate, predict
 
   function chart(selection) {
     this.selection = selection
@@ -72,7 +74,7 @@ function quantileDotplot() {
       .tickSize(4)
       .tickValues(yTickVals)
       .tickPadding(7);
-    xTicksN = 10;
+    xTicksN = 8;
     xTickVals = Array.apply(null, {length: xTicksN + 1}).map(function(val, idx){ return idx; }).map(function(elem) {
       return (xBins[xBins.length - 1] - xBins[0]) * elem / xTicksN + xBins[0];
     });
@@ -138,8 +140,8 @@ function quantileDotplot() {
   // format data for quantile dotplots from distribution parameters
   function formatDataFromParams(data) {
     // determine x values in which to bin dots
-    var distMin = Math.floor(jStat.normal.inv(0.001, data.m, data.sd)),
-      distMax = Math.ceil(jStat.normal.inv(0.999, data.m, data.sd)),
+    var distMin = Math.floor(jStat.normal.inv(0.005, data.m, data.sd)),
+      distMax = Math.ceil(jStat.normal.inv(0.995, data.m, data.sd)),
       partitionMidpoints = [];
     for (var i = distMin; i <= distMax; i += partitionWidth) {
       partitionMidpoints.push(i - partitionWidth / 2);
@@ -148,7 +150,7 @@ function quantileDotplot() {
     var plotData = [],
       lastBin = partitionMidpoints[0] - 1, // dummy value
       countInBin = 0;
-    for (var i = 0; i < 1; i += (1.0 / nDots)) {
+    for (var i = 1.0 / nDots; i < 1; i += (1.0 / nDots)) {
       // get distribution value at this quantile and corresponding bin
       var rawValue = jStat.normal.inv(i, data.m, data.sd),
         binMidpoint = partitionMidpoints.reduce(function(closest, curr) {
@@ -217,7 +219,7 @@ function quantileDotplot() {
   // set width and height state based on current window
   function updateDimensions(winWidth) {
     width = winWidth - margin.left - margin.right;
-    height = width * 0.625;
+    height = width * 0.5;
   }
 
   // getter and setter functions

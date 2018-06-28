@@ -18,15 +18,48 @@ var yAxis = d3.axisRight()
     .scale(yScale);
 
 // set up chart component
-var qdp = quantileDotplot();
-testVis = d3.select('#vis');
+var forestPlot = forestPlot();
+plotDiv = d3.select('#plot');
 
 // designate parameters of fake data (will eventually be array of effect size estimates)
-var data = [{
-    'm': 0,
-    'sd': 2,
-    'n': 100
-}];
+var data = [
+    {'author': 'Author 1',      // allow text input
+    'year': '1999',
+    'meanExp': 4,
+    'sdExp': 2,
+    'nExp': 50,
+    'meanCtrl': 5,
+    'sdCtrl': 1,
+    'nCtrl': 50,
+    'meanDiff': undefined,      // fill from input values
+    'sdDiff': undefined,
+    'weight': undefined         // fill from model specification
+    },
+    {'author': 'Author 2',
+    'year': '2001',
+    'meanExp': 2,
+    'sdExp': 1,
+    'nExp': 50,
+    'meanCtrl': 8,
+    'sdCtrl': 2,
+    'nCtrl': 50,
+    'meanDiff': undefined,
+    'sdDiff': undefined,
+    'weight': undefined
+    },
+    {'author': 'Author 3',
+    'year': '2007',
+    'meanExp': 4,
+    'sdExp': 2.5,
+    'nExp': 50,
+    'meanCtrl': 3,
+    'sdCtrl': 1,
+    'nCtrl': 50,
+    'meanDiff': undefined,
+    'sdDiff': undefined,
+    'weight': undefined
+    },
+];
 // load data and initialize
 // d3.csv("<datafile>.csv", initialize);
 
@@ -42,8 +75,8 @@ function initialize() {
 // eventually will call forest plot here
 
     // for now, call quantile dotplot
-    testVis.datum(data[0])
-        .call(qdp);
+    plotDiv.datum(data)
+        .call(forestPlot);
 }
 
 initialize();

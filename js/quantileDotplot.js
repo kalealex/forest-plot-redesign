@@ -4,14 +4,20 @@
  */
 function quantileDotplot() {
 
-  var margin = { 'top': 10, 'right': 40, 'left': 10, 'bottom': 20 },
-    width = 200,
-    height = 100,
+  var margin = { 'top': 2, 'right': 2, 'left': 2, 'bottom': 2 },
+    width,
+    height,
     svg,
     chartWrapper,
     data,
     partitionWidth = .5,
     nDots = 20,
+    spacingFactor = 1.15,
+    preferredAspectRatio = 0.25,
+    minDotRadius = 4,
+    maxDotRadius = 10,
+    maxDots,
+    xExtent,
     xBins,
     yExtent,
     x0,
@@ -21,8 +27,7 @@ function quantileDotplot() {
     yAxis,
     dotRadius,
     selection,
-    modelSpec = 'fixed effects' // need drop down menu with options: 'fixed effects', 'random effects', 'grouped fixed effects', grouped random effects'
-    mode = 'describe'; // need drop down menu with options: describe, aggregate, predict
+    hideAxes = true;
 
   function chart(selection) {
     this.selection = selection
@@ -38,7 +43,7 @@ function quantileDotplot() {
 
     // if there is no selection, create a wrapper for our chart
     if(svg.select('g').empty()) {
-      chartWrapper = svg.append('g')
+      chartWrapper = svg.append('g').attr('class','chart-wrapper');
       chartWrapper.append('g').attr('class', 'x axis');
       chartWrapper.append('g').attr('class', 'y axis');
     } else {
@@ -50,54 +55,59 @@ function quantileDotplot() {
 
   chart.render = function(data) {
     // format the distribution parameters as points for a quantile dotplot
-    console.log('before',data);
     data = formatDataFromParams(data);
-    console.log('after',data);
-    // use the updated margins with the current parent width
-    updateDimensions(svg.node().parentNode.getBoundingClientRect().width)
-    // update axes and scaling
+    // start with by informing dimensions based on current parent width
+    updateDimensionsFromParent();  
+    // update scales
     setAxesScales(data);
-
-    // then continue rendering the chart
-    x0.range([0, width]);
-    x.range([0, width]);
-    y.range([height, 0]);
-    dotRadius = Math.abs(y(1.0 / nDots) - y(0)) / 2; // half the height of one dot
-
-    // change tick values based on data
-    yTicksN = 6;
-    yTickVals = Array.apply(null, {length: yTicksN + 1}).map(function(val, idx){ return idx; }).map(function(elem) {
-      return yExtent[1] * elem / yTicksN;
-    });
-    yAxis.scale(y)
-      .ticks(yTicksN)
-      .tickSize(4)
-      .tickValues(yTickVals)
-      .tickPadding(7);
-    xTicksN = 8;
-    xTickVals = Array.apply(null, {length: xTicksN + 1}).map(function(val, idx){ return idx; }).map(function(elem) {
-      return (xBins[xBins.length - 1] - xBins[0]) * elem / xTicksN + xBins[0];
-    });
-    xAxis.scale(x)
-      .ticks(xTicksN)
-      .tickSize(4)
-      .tickValues(xTickVals)
-      .tickPadding(7);
+    // adjust chart dimensions for good plotting
+    resetDimensionsPlot();
+    // x0.range([0, width]);
+    // x.range([0, width]);
+    // y.range([height, 0]);
+    // dotRadius = Math.abs(y(1.0 / nDots) - y(0)) / 2; // half the height of one dot
+    // x0.range([0, dotRadius * 2 * nDots * spacingFactor]);
+    // x.range([0, dotRadius * 2 * nDots * spacingFactor]);
 
     // set svg and chartWrapper dimensions
     svg.attr('width', width + margin.right + margin.left)
-      .attr('height', height + margin.top + margin.bottom + 20);
-    chartWrapper.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+      .attr('height', height + margin.top + margin.bottom)
+      // .attr('transform', 'translate(' + 0 + ',' + 5 + ')');
+    chartWrapper.attr('width', width)
+      .attr('height', height)
+      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-    // create and translate the y axis
-    svg.select('.y.axis')
-      .attr('transform', 'translate(' + width + ', 0)')
+    // change tick values based on data
+    if (!hideAxes) {
+      // prep y-axis
+      yTicksN = 6;
+      yTickVals = Array.apply(null, {length: yTicksN + 1}).map(function(val, idx){ return idx; }).map(function(elem) {
+        return yExtent[1] * elem / yTicksN;
+      });
+      yAxis.scale(y)
+        .ticks(yTicksN)
+        .tickSize(4)
+        .tickValues(yTickVals)
+        .tickPadding(7);
+      // create and translate the y axis
+      svg.select('.y.axis')
+        .attr('transform', 'translate(' + width + ', 0)')
         .call(yAxis);
-
-    // create and translate the x axis
-    svg.select('.x.axis')
-      .attr('transform', 'translate(0,' + height + ')')
-      .call(xAxis);
+      // prep x-axis
+      xTicksN = 8;
+      xTickVals = Array.apply(null, {length: xTicksN + 1}).map(function(val, idx){ return idx; }).map(function(elem) {
+        return (xBins[xBins.length - 1] - xBins[0]) * elem / xTicksN + xBins[0];
+      });
+      xAxis.scale(x)
+        .ticks(xTicksN)
+        .tickSize(4)
+        .tickValues(xTickVals)
+        .tickPadding(7);
+      // create and translate the x axis
+      svg.select('.x.axis')
+        .attr('transform', 'translate(0,' + height + ')')
+        .call(xAxis);
+    }
 
     // now, update and edit the bar charts
     var dot = chartWrapper.selectAll('.g-dot')
@@ -107,10 +117,13 @@ function quantileDotplot() {
     dot.enter().append('circle')
       .attr('class', 'g-dot')
         .attr("cx", function(d) {
+          // console.log('dot x', x0(d.bin));
           return x0(d.bin);
         }) 
         .attr("cy", function(d) {
-            return y(0) - d.idx * 2 * dotRadius - dotRadius; })
+          // console.log('dot y',y(0) - d.idx * 2 * dotRadius - dotRadius);             
+          return y(0) - d.idx * 2 * dotRadius - dotRadius; 
+        })
         .attr("r", 0)
         .transition()
           .duration(500)
@@ -140,8 +153,8 @@ function quantileDotplot() {
   // format data for quantile dotplots from distribution parameters
   function formatDataFromParams(data) {
     // determine x values in which to bin dots
-    var distMin = Math.floor(jStat.normal.inv(0.005, data.m, data.sd)),
-      distMax = Math.ceil(jStat.normal.inv(0.995, data.m, data.sd)),
+    var distMin = Math.floor(jStat.normal.inv(0.025, data.meanDiff, data.sdDiff)),
+      distMax = Math.ceil(jStat.normal.inv(0.975, data.meanDiff, data.sdDiff)),
       partitionMidpoints = [];
     for (var i = distMin; i <= distMax; i += partitionWidth) {
       partitionMidpoints.push(i - partitionWidth / 2);
@@ -150,9 +163,10 @@ function quantileDotplot() {
     var plotData = [],
       lastBin = partitionMidpoints[0] - 1, // dummy value
       countInBin = 0;
+      maxDots = 0;
     for (var i = 1.0 / nDots; i < 1; i += (1.0 / nDots)) {
       // get distribution value at this quantile and corresponding bin
-      var rawValue = jStat.normal.inv(i, data.m, data.sd),
+      var rawValue = jStat.normal.inv(i, data.meanDiff, data.sdDiff),
         binMidpoint = partitionMidpoints.reduce(function(closest, curr) {
           // find and return the partition midpoint which is closest to the raw value
           // of the distribution at this quantile (this might not be the right way to bin points)
@@ -168,6 +182,9 @@ function quantileDotplot() {
       } else {
         countInBin = 0;
       }
+      if (countInBin > maxDots) {
+        maxDots = countInBin;
+      }
       plotData.push({
         'quantile': i,
         'value': rawValue,
@@ -181,45 +198,76 @@ function quantileDotplot() {
 
   // set the current axes scales based on the current data
   function setAxesScales(data) {
-    xBins = data.map(function(d) { return d.bin; });
-    // var maxDots = data.reduce(function(maxCount, curr, i, arr) {
-    //   // count the number of dots in current bin
-    //   var count = 0;
-    //   for (var j = i; j < arr.length; j++) {
-    //     if (arr[j].bin === curr.bin) {
-    //       count++;
-    //     }
-    //   }
-    //   // return the largest count so far
-    //   if (count > maxCount) {
-    //     return count;
-    //   } else {
-    //     return maxCount;
-    //   }
-    // }, 0);
-    // yExtent = [0, maxDots/nDots];
-    yExtent = [0, 1];
+    // xBins = data.map(function(d) { return d.bin; });
+    // yExtent = [0, 1];    
+    xBins = [];
+    for (var i = xExtent[0]; i <= xExtent[1]; i += partitionWidth) {
+      xBins.push(i);
+    }
+    yExtent = [0, maxDots/nDots];
 
-    x0 = d3.scalePoint()
+    // d3.scalePoint instead of scaleBand()
+    // x0 = d3.scalePoint()
+    //   .domain(xBins)
+    //   .padding(dotRadius/20);
+
+    x0 = d3.scaleBand()
       .domain(xBins)
-      .padding(0.2);
-
+      .range([0, width])
+      .paddingInner(1 - spacingFactor)
+      .paddingOuter(1);
+      
     x = d3.scaleLinear()
-      .domain([xBins[0], xBins[xBins.length - 1]]);
+      .domain(xExtent)
+      .range([0, width]);
 
     y = d3.scaleLinear()
-          .domain(yExtent);
+      .domain(yExtent)
+      .range([height, 0]);
 
     xAxis = d3.axisBottom()
       .scale(x);
     yAxis = d3.axisRight()
       .scale(y);
+    // console.log('x0 test',x0(0));
+    // console.log('y test',y(0));
   }
-
-  // set width and height state based on current window
-  function updateDimensions(winWidth) {
+  
+  // set width and height state based on range of dot radii which are best for plotting
+  function resetDimensionsPlot() {
+    // smaller of half the height of one dot on current scale or maximum radius
+    dotRadius = Math.min(Math.abs(y(yExtent[1] / maxDots) - y(0)) / 2, maxDotRadius); 
+    // no larger than minimum dot radius
+    dotRadius = Math.max(dotRadius, minDotRadius);
+    // width should be set by size of dots and spacing?
+    console.log('dotRadius', dotRadius);
+    // console.log('nDots', nDots);
+    // console.log('spacing', spacingFactor);
+    width = dotRadius * 2 * nDots * spacingFactor;
+    // set height based on either preferred aspect ratio OR minimum dot radius
+    // var aspectRatioHeight = width * preferredAspectRatio,
+    //   minDotRadiusHeight = maxDots * minDotRadius * 2; 
+    // height = Math.max(aspectRatioHeight, minDotRadiusHeight);
+    height = maxDots * dotRadius * 2;
+    // reset scale ranges based on updated dimensions
+    x0.range([0, width]);
+    x.range([0, width]);
+    y.range([height, 0]);
+    console.log('fit to plot',width, height)
+    // console.log('x0 test',x0(0));
+    // console.log('y test',y(0));
+  }
+  
+  // set width and height state based on the dimensions of the parent element
+  function updateDimensionsFromParent() {
+    winWidth = svg.node().parentNode.getBoundingClientRect().width;
+    // set width based on parent element of svg
     width = winWidth - margin.left - margin.right;
-    height = width * 0.5;
+    // set height based on either preferred aspect ratio OR minimum dot radius
+    var aspectRatioHeight = winWidth * preferredAspectRatio - margin.top - margin.bottom,
+      minDotRadiusHeight = maxDots * minDotRadius * 2; 
+    height = Math.max(aspectRatioHeight, minDotRadiusHeight);
+    console.log('from parent',width, height);
   }
 
   // getter and setter functions
@@ -250,6 +298,42 @@ function quantileDotplot() {
   chart.nDots = function(_) {
     if (!arguments.length) return nDots;
     nDots = _;
+    return chart;
+  };
+
+  chart.spacingFactor = function(_) {
+    if (!arguments.length) return spacingFactor;
+    spacingFactor = _;
+    return chart;
+  };
+  
+  chart.preferredAspectRatio = function(_) {
+    if (!arguments.length) return preferredAspectRatio;
+    preferredAspectRatio = _;
+    return chart;
+  };
+
+  chart.minDotRadius = function(_) {
+    if (!arguments.length) return minDotRadius;
+    minDotRadius = _;
+    return chart;
+  };
+
+  chart.maxDotRadius = function(_) {
+    if (!arguments.length) return maxDotRadius;
+    maxDotRadius = _;
+    return chart;
+  };
+
+  chart.hideAxes = function(_) {
+    if (!arguments.length) return hideAxes;
+    hideAxes = _;
+    return chart;
+  };
+
+  chart.xExtent = function(_) {
+    if (!arguments.length) return xExtent;
+    xExtent = _;
     return chart;
   };
 

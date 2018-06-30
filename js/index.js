@@ -45,6 +45,7 @@ var data = [
     'nCtrl': 50,
     'meanDiff': undefined,
     'sdDiff': undefined,
+    'nDiff': undefined,
     'weight': undefined
     },
     {'author': 'Author 3',

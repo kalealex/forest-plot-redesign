@@ -13,7 +13,12 @@
   <style type="text/css">
     /* plots */
     svg {
+      width: 100%;
       height: 100%;
+    }
+    .chart-wrapper {
+      /* width: 100%;
+      height: 100%; */
     }
     .axis line,
     .axis path {
@@ -35,15 +40,20 @@
       text-align: left; 
     }
     th, td { 
-      padding: 5px 20px;
-      height: 40px;
+      /* height: 40px; */
       vertical-align: center;
+      padding: 5px 5px;
     }
     th.center, td.center { 
       text-align: center; 
+      /* padding: 5px 5px; */
     }
     th.num, td.num { 
-      text-align: right; 
+      text-align: right;
+      /* padding: 5px 5px; */
+    }
+    th.chart, td.chart { 
+      text-align: center;
     }
     tr:hover {
       background-color: #ddd;

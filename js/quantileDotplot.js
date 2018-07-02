@@ -12,8 +12,9 @@ function quantileDotplot() {
     data,
     partitionWidth = .5,
     nDots = 20,
-    spacingFactor = 1.15,
+    spacingFactor = 1.25,
     preferredAspectRatio = 0.25,
+    dotRadius = 5,
     minDotRadius = 4,
     maxDotRadius = 10,
     maxDots,
@@ -25,7 +26,6 @@ function quantileDotplot() {
     y,
     xAxis,
     yAxis,
-    dotRadius,
     selection,
     hideAxes = true;
 
@@ -61,18 +61,12 @@ function quantileDotplot() {
     // update scales
     setAxesScales(data);
     // adjust chart dimensions for good plotting
-    resetDimensionsPlot();
-    // x0.range([0, width]);
-    // x.range([0, width]);
-    // y.range([height, 0]);
-    // dotRadius = Math.abs(y(1.0 / nDots) - y(0)) / 2; // half the height of one dot
-    // x0.range([0, dotRadius * 2 * nDots * spacingFactor]);
-    // x.range([0, dotRadius * 2 * nDots * spacingFactor]);
+    // resetDimensionsPlot();
 
     // set svg and chartWrapper dimensions
     svg.attr('width', width + margin.right + margin.left)
       .attr('height', height + margin.top + margin.bottom)
-      // .attr('transform', 'translate(' + 0 + ',' + 5 + ')');
+      // .attr('transform', 'translate(' + 0 + ',' + 5 + ')'); // top padding for td is 5px
     chartWrapper.attr('width', width)
       .attr('height', height)
       .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
@@ -117,11 +111,9 @@ function quantileDotplot() {
     dot.enter().append('circle')
       .attr('class', 'g-dot')
         .attr("cx", function(d) {
-          // console.log('dot x', x0(d.bin));
           return x0(d.bin);
         }) 
-        .attr("cy", function(d) {
-          // console.log('dot y',y(0) - d.idx * 2 * dotRadius - dotRadius);             
+        .attr("cy", function(d) {         
           return y(0) - d.idx * 2 * dotRadius - dotRadius; 
         })
         .attr("r", 0)
@@ -201,7 +193,7 @@ function quantileDotplot() {
     // xBins = data.map(function(d) { return d.bin; });
     // yExtent = [0, 1];    
     xBins = [];
-    for (var i = xExtent[0]; i <= xExtent[1]; i += partitionWidth) {
+    for (var i = xExtent[0] + partitionWidth / 2; i <= xExtent[1]; i += partitionWidth) {
       xBins.push(i);
     }
     yExtent = [0, maxDots/nDots];
@@ -214,7 +206,7 @@ function quantileDotplot() {
     x0 = d3.scaleBand()
       .domain(xBins)
       .range([0, width])
-      .paddingInner(1 - spacingFactor)
+      .paddingInner(spacingFactor - 1)
       .paddingOuter(1);
       
     x = d3.scaleLinear()
@@ -229,20 +221,17 @@ function quantileDotplot() {
       .scale(x);
     yAxis = d3.axisRight()
       .scale(y);
-    // console.log('x0 test',x0(0));
-    // console.log('y test',y(0));
   }
   
   // set width and height state based on range of dot radii which are best for plotting
   function resetDimensionsPlot() {
-    // smaller of half the height of one dot on current scale or maximum radius
-    dotRadius = Math.min(Math.abs(y(yExtent[1] / maxDots) - y(0)) / 2, maxDotRadius); 
-    // no larger than minimum dot radius
-    dotRadius = Math.max(dotRadius, minDotRadius);
-    // width should be set by size of dots and spacing?
-    console.log('dotRadius', dotRadius);
-    // console.log('nDots', nDots);
-    // console.log('spacing', spacingFactor);
+    // // smaller of half the height of one dot on current scale or maximum radius
+    // dotRadius = Math.min(Math.abs(y(yExtent[1] / maxDots) - y(0)) / 2, maxDotRadius); 
+    // // no larger than minimum dot radius
+    // dotRadius = Math.max(dotRadius, minDotRadius);
+    // // width should be set by size of dots and spacing?
+    // console.log('dotRadius', dotRadius);
+
     width = dotRadius * 2 * nDots * spacingFactor;
     // set height based on either preferred aspect ratio OR minimum dot radius
     // var aspectRatioHeight = width * preferredAspectRatio,
@@ -253,9 +242,6 @@ function quantileDotplot() {
     x0.range([0, width]);
     x.range([0, width]);
     y.range([height, 0]);
-    console.log('fit to plot',width, height)
-    // console.log('x0 test',x0(0));
-    // console.log('y test',y(0));
   }
   
   // set width and height state based on the dimensions of the parent element

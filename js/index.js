@@ -20,6 +20,11 @@ var yAxis = d3.axisRight()
 // set up chart component
 var forestPlot = forestPlot();
 plotDiv = d3.select('#plot');
+// test that quantile dotplot maintains functionality through development
+var qdp = quantileDotplot()
+    .hideAxes(false)
+    .xExtent([-3, 3]);
+testDiv = d3.select('#test');
 
 // designate parameters of fake data (will eventually be array of effect size estimates)
 var data = [
@@ -78,6 +83,12 @@ function initialize() {
     // for now, call quantile dotplot
     plotDiv.datum(data)
         .call(forestPlot);
+    testDiv.append('svg')
+    .datum({
+        'meanDiff': 0,
+        'sdDiff': 1
+    })
+    .call(qdp);
 }
 
 initialize();

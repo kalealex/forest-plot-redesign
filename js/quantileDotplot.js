@@ -4,7 +4,7 @@
  */
 function quantileDotplot() {
 
-  var margin = { 'top': 2, 'right': 2, 'left': 2, 'bottom': 2 },
+  var margin = { 'top': 2, 'right': 2, 'left': 2, 'bottom': 15 },
     width,
     height,
     svg,
@@ -13,10 +13,10 @@ function quantileDotplot() {
     partitionWidth = .5,
     nDots = 20,
     spacingFactor = 1.25,
-    preferredAspectRatio = 0.25,
+    preferredAspectRatio = 0.15,
     dotRadius = 5,
     minDotRadius = 4,
-    maxDotRadius = 10,
+    // maxDotRadius = 10,
     maxDots,
     xExtent,
     xBins,
@@ -45,7 +45,7 @@ function quantileDotplot() {
     if(svg.select('g').empty()) {
       chartWrapper = svg.append('g').attr('class','chart-wrapper');
       chartWrapper.append('g').attr('class', 'x axis');
-      chartWrapper.append('g').attr('class', 'y axis');
+      // chartWrapper.append('g').attr('class', 'y axis');
     } else {
       chartWrapper = svg.select('g')
     }
@@ -67,26 +67,24 @@ function quantileDotplot() {
     svg.attr('width', width + margin.right + margin.left)
       .attr('height', height + margin.top + margin.bottom)
       // .attr('transform', 'translate(' + 0 + ',' + 5 + ')'); // top padding for td is 5px
-    chartWrapper.attr('width', width)
-      .attr('height', height)
-      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+    chartWrapper.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
     // change tick values based on data
     if (!hideAxes) {
-      // prep y-axis
-      yTicksN = 6;
-      yTickVals = Array.apply(null, {length: yTicksN + 1}).map(function(val, idx){ return idx; }).map(function(elem) {
-        return yExtent[1] * elem / yTicksN;
-      });
-      yAxis.scale(y)
-        .ticks(yTicksN)
-        .tickSize(4)
-        .tickValues(yTickVals)
-        .tickPadding(7);
-      // create and translate the y axis
-      svg.select('.y.axis')
-        .attr('transform', 'translate(' + width + ', 0)')
-        .call(yAxis);
+      // // prep y-axis
+      // yTicksN = 6;
+      // yTickVals = Array.apply(null, {length: yTicksN + 1}).map(function(val, idx){ return idx; }).map(function(elem) {
+      //   return yExtent[1] * elem / yTicksN;
+      // });
+      // yAxis.scale(y)
+      //   .ticks(yTicksN)
+      //   .tickSize(4)
+      //   .tickValues(yTickVals)
+      //   .tickPadding(7);
+      // // create and translate the y axis
+      // svg.select('.y.axis')
+      //   .attr('transform', 'translate(' + width + ', 0)')
+      //   .call(yAxis);
       // prep x-axis
       xTicksN = 8;
       xTickVals = Array.apply(null, {length: xTicksN + 1}).map(function(val, idx){ return idx; }).map(function(elem) {
@@ -94,9 +92,9 @@ function quantileDotplot() {
       });
       xAxis.scale(x)
         .ticks(xTicksN)
-        .tickSize(4)
+        .tickSize(3)
         .tickValues(xTickVals)
-        .tickPadding(7);
+        .tickPadding(5);
       // create and translate the x axis
       svg.select('.x.axis')
         .attr('transform', 'translate(0,' + height + ')')
@@ -219,30 +217,30 @@ function quantileDotplot() {
 
     xAxis = d3.axisBottom()
       .scale(x);
-    yAxis = d3.axisRight()
-      .scale(y);
+    // yAxis = d3.axisRight()
+    //   .scale(y);
   }
   
   // set width and height state based on range of dot radii which are best for plotting
-  function resetDimensionsPlot() {
-    // // smaller of half the height of one dot on current scale or maximum radius
-    // dotRadius = Math.min(Math.abs(y(yExtent[1] / maxDots) - y(0)) / 2, maxDotRadius); 
-    // // no larger than minimum dot radius
-    // dotRadius = Math.max(dotRadius, minDotRadius);
-    // // width should be set by size of dots and spacing?
-    // console.log('dotRadius', dotRadius);
+  // function resetDimensionsPlot() {
+  //   // smaller of half the height of one dot on current scale or maximum radius
+  //   dotRadius = Math.min(Math.abs(y(yExtent[1] / maxDots) - y(0)) / 2, maxDotRadius); 
+  //   // no larger than minimum dot radius
+  //   dotRadius = Math.max(dotRadius, minDotRadius);
+  //   // width should be set by size of dots and spacing?
+  //   console.log('dotRadius', dotRadius);
 
-    width = dotRadius * 2 * nDots * spacingFactor;
-    // set height based on either preferred aspect ratio OR minimum dot radius
-    // var aspectRatioHeight = width * preferredAspectRatio,
-    //   minDotRadiusHeight = maxDots * minDotRadius * 2; 
-    // height = Math.max(aspectRatioHeight, minDotRadiusHeight);
-    height = maxDots * dotRadius * 2;
-    // reset scale ranges based on updated dimensions
-    x0.range([0, width]);
-    x.range([0, width]);
-    y.range([height, 0]);
-  }
+  //   width = dotRadius * 2 * nDots * spacingFactor;
+  //   // set height based on either preferred aspect ratio OR minimum dot radius
+  //   // var aspectRatioHeight = width * preferredAspectRatio,
+  //   //   minDotRadiusHeight = maxDots * minDotRadius * 2; 
+  //   // height = Math.max(aspectRatioHeight, minDotRadiusHeight);
+  //   height = maxDots * dotRadius * 2;
+  //   // reset scale ranges based on updated dimensions
+  //   x0.range([0, width]);
+  //   x.range([0, width]);
+  //   y.range([height, 0]);
+  // }
   
   // set width and height state based on the dimensions of the parent element
   function updateDimensionsFromParent() {
@@ -299,15 +297,15 @@ function quantileDotplot() {
     return chart;
   };
 
-  chart.minDotRadius = function(_) {
-    if (!arguments.length) return minDotRadius;
-    minDotRadius = _;
+  chart.dotRadius = function(_) {
+    if (!arguments.length) return dotRadius;
+    dotRadius = _;
     return chart;
   };
 
-  chart.maxDotRadius = function(_) {
-    if (!arguments.length) return maxDotRadius;
-    maxDotRadius = _;
+  chart.minDotRadius = function(_) {
+    if (!arguments.length) return minDotRadius;
+    minDotRadius = _;
     return chart;
   };
 
@@ -322,6 +320,11 @@ function quantileDotplot() {
     xExtent = _;
     return chart;
   };
+
+  // get pixels at x==0
+  chart.xZero = function() {
+    return x(0);
+  }
 
   chart.init = function(_) {
     if (!arguments.length) return init;

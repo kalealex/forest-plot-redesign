@@ -28,7 +28,7 @@
     }
     .no-effect-line {
       fill: none;
-      stroke: rgb(153, 153, 153);
+      stroke: rgb(197, 197, 197);
       stroke-width: 1.5px;
       shape-rendering: crispEdges;
     }
@@ -50,25 +50,30 @@
       font-weight: 500;
       font-size: 11; 
       padding: 20px;
+      overflow-y: auto;
     }
     th { 
       text-align: left; 
     }
+    th.description {
+      font-size: 12;
+      font-weight: 900;
+    }
     th, td { 
-      /* height: 40px; */
       vertical-align: center;
       padding: 5px 5px;
     }
     th.center, td.center { 
       text-align: center; 
-      /* padding: 5px 5px; */
     }
     th.num, td.num { 
       text-align: right;
-      /* padding: 5px 5px; */
     }
     th.chart { 
       text-align: center;
+    }
+    th.estimates, td.estimates { 
+      border-left: 1px solid #666;
     }
     tr:hover {
       background-color: #ddd;
